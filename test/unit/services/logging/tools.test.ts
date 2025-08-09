@@ -41,7 +41,7 @@ describe('Logging Tools', () => {
 
     it('should handle search-logs tool execution', async () => {
       const { registerLoggingTools } = await import('../../../../src/services/logging/tools.js');
-      
+
       registerLoggingTools(mockServer as any);
       
       const toolCall = mockServer.registerTool.mock.calls.find(
@@ -81,6 +81,32 @@ describe('Logging Tools', () => {
       
       expect(result).toBeDefined();
       expect(result.content[0].text).toContain('Comprehensive Log Search Results');
+    });
+
+    it('should pass readMask to getEntries when provided', async () => {
+      const { registerLoggingTools } = await import('../../../../src/services/logging/tools.js');
+
+      registerLoggingTools(mockServer as any);
+
+      const toolCall = mockServer.registerTool.mock.calls.find(
+        call => call[0] === 'gcp-logging-query-logs'
+      );
+
+      const toolHandler = toolCall![2];
+
+      await toolHandler({
+        filter: 'severity>=ERROR',
+        limit: 5,
+        readMask: 'timestamp,logName'
+      });
+
+      expect(mockLoggingClient.getEntries).toHaveBeenCalledWith(
+        expect.objectContaining({
+          pageSize: 5,
+          filter: 'severity>=ERROR',
+          readMask: 'timestamp,logName'
+        })
+      );
     });
 
     it('should handle errors gracefully', async () => {

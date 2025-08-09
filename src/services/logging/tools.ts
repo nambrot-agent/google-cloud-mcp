@@ -32,17 +32,28 @@ export function registerLoggingTools(server: McpServer): void {
           .max(1000)
           .default(50)
           .describe("Maximum number of log entries to return"),
+        readMask: z
+          .string()
+          .optional()
+          .describe(
+            "Comma-separated list of fields to include in each log entry",
+          ),
       },
     },
-    async ({ filter, limit }) => {
+    async ({ filter, limit, readMask }) => {
       try {
         const projectId = await getProjectId();
         const logging = getLoggingClient();
 
-        const [entries] = await logging.getEntries({
+        const request: any = {
           pageSize: limit,
           filter,
-        });
+        };
+        if (readMask) {
+          request.readMask = readMask;
+        }
+
+        const [entries] = await logging.getEntries(request);
 
         if (!entries || entries.length === 0) {
           return {
@@ -121,9 +132,15 @@ Please check your filter syntax and try again. For filter syntax help, see: http
           .max(1000)
           .default(50)
           .describe("Maximum number of log entries to return"),
+        readMask: z
+          .string()
+          .optional()
+          .describe(
+            "Comma-separated list of fields to include in each log entry",
+          ),
       },
     },
-    async ({ startTime, endTime, filter, limit }) => {
+    async ({ startTime, endTime, filter, limit, readMask }) => {
       try {
         const projectId = await getProjectId();
         const logging = getLoggingClient();
@@ -137,10 +154,15 @@ Please check your filter syntax and try again. For filter syntax help, see: http
           filterStr = `${filterStr} AND ${filter}`;
         }
 
-        const [entries] = await logging.getEntries({
+        const request: any = {
           pageSize: limit,
           filter: filterStr,
-        });
+        };
+        if (readMask) {
+          request.readMask = readMask;
+        }
+
+        const [entries] = await logging.getEntries(request);
 
         if (!entries || entries.length === 0) {
           return {
@@ -238,9 +260,15 @@ Please check your time range format and try again. Valid formats include:
           .max(500)
           .default(50)
           .describe("Maximum number of log entries to return"),
+        readMask: z
+          .string()
+          .optional()
+          .describe(
+            "Comma-separated list of fields to include in each log entry",
+          ),
       },
     },
-    async ({ searchTerm, timeRange, severity, resource, limit }) => {
+    async ({ searchTerm, timeRange, severity, resource, limit, readMask }) => {
       try {
         const projectId = await getProjectId();
         const logging = getLoggingClient();
@@ -325,11 +353,16 @@ Please check your time range format and try again. Valid formats include:
 
         const filter = filterParts.join(" AND ");
 
-        const [entries] = await logging.getEntries({
+        const request: any = {
           pageSize: limit,
           filter,
           orderBy: "timestamp desc",
-        });
+        };
+        if (readMask) {
+          request.readMask = readMask;
+        }
+
+        const [entries] = await logging.getEntries(request);
 
         if (!entries || entries.length === 0) {
           return {
