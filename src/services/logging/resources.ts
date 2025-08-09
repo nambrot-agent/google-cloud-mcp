@@ -25,10 +25,15 @@ export function registerLoggingResources(server: McpServer): void {
         const logging = getLoggingClient();
 
         const defaultFilter = process.env.LOG_FILTER || "";
-        const [entries] = await logging.getEntries({
+        const readMask = uri.searchParams.get("readMask") || undefined;
+        const request: any = {
           pageSize: 50,
           filter: defaultFilter,
-        });
+        };
+        if (readMask) {
+          request.readMask = readMask;
+        }
+        const [entries] = await logging.getEntries(request);
 
         if (!entries || entries.length === 0) {
           return {
@@ -114,10 +119,16 @@ export function registerLoggingResources(server: McpServer): void {
           ? decodeURIComponent(filter[0])
           : decodeURIComponent(filter);
 
-        const [entries] = await logging.getEntries({
+        const readMask = uri.searchParams.get("readMask") || undefined;
+        const request: any = {
           pageSize: 50,
           filter: decodedFilter,
-        });
+        };
+        if (readMask) {
+          request.readMask = readMask;
+        }
+
+        const [entries] = await logging.getEntries(request);
 
         if (!entries || entries.length === 0) {
           return {
